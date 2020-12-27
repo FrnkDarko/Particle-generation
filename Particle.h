@@ -1,21 +1,23 @@
 #ifndef PARTICLE_H
 #define PARTICLE_H
 #include "ParticleType.h"
+#include "ResonanceType.h"
+
 class Particle
 {
 public:
     Particle();
     Particle(const char *Name, double Px, double Py, double Pz);
-    int GetIndex();
-    double GetPx();
-    double GetPy();
-    double GetPz();
-    void SetIndex(int Index);
+    int GetIndex() const;
+    double GetPx() const;
+    double GetPy() const;
+    double GetPz() const;
+    void SetIndex(int const Index);
     void SetIndex(const char *name);
     void SetP(double Px, double Py, double Pz);
     double GetMass() const;
-    double GetEnergy();
-    double InvMass(Particle &p);
+    double GetEnergy() const;
+    double InvMass(Particle &p) const;
     static void PrintIndex();
     void PrintParticle();
     static void AddParticleType(const char *name, const double mass, const int charge, const double width);

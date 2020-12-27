@@ -7,7 +7,7 @@ public:
     const char *GetName() const;
     double GetMass() const;
     int GetCharge() const;
-    virtual int GetWidth() const;
+    virtual double GetWidth() const;
     virtual void Print() const;
 
 private:

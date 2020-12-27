@@ -29,33 +29,33 @@ int main()
     TH1F *invmass_conc = new TH1F("invmass_conc", "Concord invariant mass", 80, 0., 2.);
     TH1F *invmass_pi_k_disc = new TH1F("invmass_pi_k_disc", "Discord Pion and Kaon invariant mass", 80, 0., 2.);
     TH1F *invmass_pi_k_conc = new TH1F("invmass_pi_k_conc", "Concord Pion and Kaon invariant mass", 80, 0., 2.);
-    TH1F *invmass_k = new TH1F("invmass_k", "Invariant mass of decayed particles", 80, 0., 2.);
+    TH1F *invmass_k = new TH1F("invmass_k", "Invariant mass of particles generated after a decay", 80, 0., 2.);
 
     gRandom->SetSeed();
     int N = 120;
     Particle particle[N];
-    for (int i = 0; i != 1E5; i++)
+    for (int i = 0; i != 10; i++)
     {
+        int k = 0;
         for (int j = 0; j != 100; j++)
         {
             Particle part;
             double phi = gRandom->Uniform(0, 2 * M_PI);
-            phi_angle->Fill(phi);
             double theta = gRandom->Uniform(0, M_PI);
-            theta_angle->Fill(theta);
             double P = gRandom->Exp(1);
-            impulse->Fill(P);
             double px = P * sin(theta) * cos(phi);
             double py = P * sin(theta) * sin(phi);
             double pz = P * cos(theta);
-            double pt = sqrt(pow(px, 2) + pow(px, 2));
+            double pt = sqrt(pow(px, 2) + pow(py, 2));
+            phi_angle->Fill(phi);
+            theta_angle->Fill(theta);
+            impulse->Fill(P);
             t_impulse->Fill(pt);
             part.SetP(px, py, pz);
-            int k = 0;
-            double x = gRandom->Uniform(0, 1);
+            double x = gRandom->Uniform(0., 1.);
             if (x < 0.8)
             {
-                double y = gRandom->Uniform(0, 1);
+                double y = gRandom->Uniform(0., 1.);
                 if (y < 0.5)
                 {
                     part.SetIndex("Pi+");
@@ -65,9 +65,9 @@ int main()
                     part.SetIndex("Pi-");
                 }
             }
-            if (x > 0.8 && x < 0.9)
+            else if (x > 0.8 && x < 0.9)
             {
-                double y = gRandom->Uniform(0, 1);
+                double y = gRandom->Uniform(0., 1.);
                 if (y < 0.5)
                 {
                     part.SetIndex("K+");
@@ -77,9 +77,9 @@ int main()
                     part.SetIndex("K-");
                 }
             }
-            if (x > 0.9 && x < 0.99)
+            else if (x > 0.9 && x < 0.99)
             {
-                double y = gRandom->Uniform(0, 1);
+                double y = gRandom->Uniform(0., 1.);
                 if (y < 0.5)
                 {
                     part.SetIndex("P+");
@@ -89,10 +89,10 @@ int main()
                     part.SetIndex("P-");
                 }
             }
-            else if (x > 0.99)
+            else
             {
                 part.SetIndex("K*");
-                double y = gRandom->Uniform(0, 1);
+                double y = gRandom->Uniform(0., 1.);
                 Particle dau1;
                 Particle dau2;
                 if (y < 0.5)
@@ -106,92 +106,82 @@ int main()
                     dau2.SetIndex("K+");
                 }
                 part.Decay2Body(dau1, dau2);
-                invmass_k->Fill(dau1.InvMass(dau2));
                 particle[100 + k] = dau1;
                 k++;
                 particle[100 + k] = dau2;
                 k++;
+                invmass_k->Fill(dau1.InvMass(dau2));
+                std::cout << "invariant mass of decay particles: " << dau1.InvMass(dau2) << '\n';
             }
             particle_type->Fill(part.GetIndex());
-            particle[j] = part;
             energy->Fill(part.GetEnergy());
-
-            if (j > 0)
+            particle[j] = part;
+        }
+        for (int j = 0; j != 100 + k; j++)
+        {
+            for (int l = j + 1; l != 100 + k; l++)
             {
-                invmass_tot->Fill(particle[0].InvMass(particle[j]));
-                if (particle[0].GetIndex() % 2 == 0)
+                invmass_tot->Fill(particle[l].InvMass(particle[j]));
+                if ((particle[l].GetIndex() + particle[j].GetIndex()) % 2 == 0)
                 {
-                    if (particle[j].GetIndex() % 2 == 0)
+                    invmass_conc->Fill(particle[l].InvMass(particle[j]));
+                    if ((particle[l].GetIndex() == 0 && particle[j].GetIndex() == 2) ||
+                        (particle[j].GetIndex() == 0 && particle[l].GetIndex() == 2))
                     {
-                        invmass_conc->Fill(particle[0].InvMass(particle[j]));
+                        invmass_pi_k_conc->Fill(particle[l].InvMass(particle[j]));
                     }
-                    else
+                    else if ((particle[l].GetIndex() == 1 && particle[j].GetIndex() == 3) ||
+                             (particle[j].GetIndex() == 1 && particle[l].GetIndex() == 3))
                     {
-                        invmass_disc->Fill(particle[0].InvMass(particle[j]));
-                    }
-                }
-                if (particle[0].GetIndex() % 2 != 0)
-                {
-                    if (particle[j].GetIndex() % 2 != 0)
-                    {
-                        invmass_conc->Fill(particle[0].InvMass(particle[j]));
-                    }
-                    else
-                    {
-                        invmass_disc->Fill(particle[0].InvMass(particle[j]));
+                        invmass_pi_k_conc->Fill(particle[l].InvMass(particle[j]));
                     }
                 }
-            }
-            for (int m = 0; m != j; m++)
-            {
-                if (particle[m].GetIndex() == 0 && particle[j].GetIndex() == 3)
+                else if ((particle[l].GetIndex() + particle[j].GetIndex()) % 2 != 0)
                 {
-                    invmass_pi_k_disc->Fill(particle[m].InvMass(particle[j]));
-                }
-                else if (particle[m].GetIndex() == 1 && particle[j].GetIndex() == 2)
-                {
-                    invmass_pi_k_disc->Fill(particle[m].InvMass(particle[j]));
-                }
-                else if (particle[m].GetIndex() == 0 && particle[j].GetIndex() == 2)
-                {
-                    invmass_pi_k_conc->Fill(particle[m].InvMass(particle[j]));
-                }
-                else if (particle[m].GetIndex() == 1 && particle[j].GetIndex() == 3)
-                {
-                    invmass_pi_k_conc->Fill(particle[m].InvMass(particle[j]));
+                    invmass_disc->Fill(particle[l].InvMass(particle[j]));
+                    if ((particle[l].GetIndex() == 0 && particle[j].GetIndex() == 3) ||
+                        (particle[j].GetIndex() == 0 && particle[l].GetIndex() == 3))
+                    {
+                        invmass_pi_k_disc->Fill(particle[l].InvMass(particle[j]));
+                    }
+                    else if ((particle[l].GetIndex() == 1 && particle[j].GetIndex() == 2) ||
+                             (particle[j].GetIndex() == 1 && particle[l].GetIndex() == 2))
+                    {
+                        invmass_pi_k_disc->Fill(particle[l].InvMass(particle[j]));
+                    }
                 }
             }
         }
     }
-    TCanvas *c1 = new TCanvas("c1", "Particle types");
+    TCanvas *c1 = new TCanvas("c1", "Particle types, angles, impulse");
     c1->Divide(3, 2);
     c1->cd(1);
-    particle_type->Draw();
+    particle_type->Draw("E, H");
     c1->cd(2);
-    phi_angle->Draw();
+    phi_angle->Draw("E, H");
     c1->cd(3);
-    theta_angle->Draw();
+    theta_angle->Draw("E, H");
     c1->cd(4);
-    impulse->Draw();
+    impulse->Draw("E, H");
     c1->cd(5);
-    t_impulse->Draw();
+    t_impulse->Draw("E, H");
     c1->cd(6);
-    energy->Draw();
+    energy->Draw("E, H");
 
     TCanvas *c2 = new TCanvas("c2", "Invariant mass");
     c2->Divide(3, 2);
     c2->cd(1);
-    invmass_tot->Draw();
+    invmass_tot->Draw("E, H");
     c2->cd(2);
-    invmass_disc->Draw();
+    invmass_disc->Draw("E, H");
     c2->cd(3);
-    invmass_conc->Draw();
+    invmass_conc->Draw("E, H");
     c2->cd(4);
-    invmass_pi_k_disc->Draw();
+    invmass_pi_k_disc->Draw("E, H");
     c2->cd(5);
-    invmass_pi_k_conc->Draw();
+    invmass_pi_k_conc->Draw("E, H");
     c2->cd(6);
-    invmass_k->Draw();
+    invmass_k->Draw("E, H");
 
     TFile *file = new TFile("particles.root", "RECREATE");
     particle_type->Write();

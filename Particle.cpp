@@ -1,21 +1,19 @@
-#include "ParticleType.h"
-#include "ResonanceType.h"
 #include "Particle.h"
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
 
-Particle::Particle() : fIndex(0), fPx(0), fPy(0), fPz(0) {}
+Particle::Particle() : fIndex{0}, fPx{0.}, fPy{0.}, fPz{0.} {}
 
 Particle::Particle(const char *Name, double Px, double Py, double Pz)
     : fName(Name), fPx(Px), fPy(Py), fPz(Pz) { fIndex = FindParticle(Name); }
 int Particle::fNParticleType = 0;
 ParticleType *Particle::fParticleType[fMaxNum];
-int Particle::GetIndex() { return fIndex; }
-double Particle::GetPx() { return fPx; }
-double Particle::GetPy() { return fPy; }
-double Particle::GetPz() { return fPz; }
-void Particle::SetIndex(int Index) { fIndex = Index; }
+int Particle::GetIndex() const { return fIndex; }
+double Particle::GetPx() const { return fPx; }
+double Particle::GetPy() const { return fPy; }
+double Particle::GetPz() const { return fPz; }
+void Particle::SetIndex(int const Index) { fIndex = Index; }
 void Particle::SetIndex(const char *name)
 {
     fIndex = FindParticle(name);
@@ -33,22 +31,22 @@ double Particle::GetMass() const
     return (fParticleType[fIndex]->GetMass());
 }
 
-double Particle::GetEnergy()
+double Particle::GetEnergy() const
 {
-    double m = GetMass();
-    double p = pow(GetPx(), 2) + pow(GetPy(), 2) + pow(GetPz(), 2);
-    const double energy = sqrt(pow(m, 2) + p);
+    double m = pow(GetMass(), 2);
+    double p = pow(fPx, 2) + pow(fPy, 2) + pow(fPz, 2);
+    const double energy = sqrt(m + p);
     return energy;
 }
 
-double Particle::InvMass(Particle &p)
+double Particle::InvMass(Particle &p) const
 {
-    const double E1 = GetEnergy();
-    const double E2 = p.GetEnergy();
-    double P1 = sqrt(pow(fPx, 2) + pow(fPy, 2) + pow(fPz, 2));
-    double P2 = sqrt(pow(p.fPx, 2) + pow(p.fPy, 2) + pow(p.fPz, 2));
-    double invmass = sqrt(pow(E1 + E2, 2) - pow(P1 + P2, 2));
-    return invmass;
+    double E2 = (GetEnergy() + p.GetEnergy()) * (GetEnergy() + p.GetEnergy());
+    double Px = fPx + p.GetPx();
+    double Py = fPy + p.GetPy();
+    double Pz = fPz + p.GetPz();
+    double P2 = pow(Px, 2) + pow(Py, 2) + pow(Pz, 2);
+    return sqrt(E2 - P2);
 }
 
 void Particle::PrintIndex()
@@ -61,7 +59,7 @@ void Particle::PrintIndex()
 
 void Particle::PrintParticle()
 {
-    std::cout << "Type: " << FindParticle(fName) << '\n'; //ritorna solo fMaxNum + 1
+    std::cout << "Type: " << FindParticle(fName) << '\n';
     std::cout << "Name: " << fName << '\n';
     std::cout << "Momentum: (" << fPx << ", " << fPy << ", " << fPz << ")" << '\n';
 }
@@ -129,9 +127,10 @@ int Particle::Decay2Body(Particle &dau1, Particle &dau2) const
 {
     if (GetMass() == 0.0)
     {
-        std::cout << "Decayment cannot be performed if mass is zero" << '\n';
+        std::cout << "Decayment cannot be preformed if mass is zero" << '\n';
         return 1;
     }
+
     double massMot = GetMass();
     double massDau1 = dau1.GetMass();
     double massDau2 = dau2.GetMass();
@@ -139,6 +138,7 @@ int Particle::Decay2Body(Particle &dau1, Particle &dau2) const
     if (fIndex > -1)
     {
         float x1, x2, w, y1, y2;
+
         double invnum = 1. / RAND_MAX;
         do
         {
@@ -150,14 +150,18 @@ int Particle::Decay2Body(Particle &dau1, Particle &dau2) const
         w = sqrt((-2.0 * log(w)) / w);
         y1 = x1 * w;
         y2 = x2 * w;
+
         massMot += fParticleType[fIndex]->GetWidth() * y1;
     }
+
     if (massMot < massDau1 + massDau2)
     {
-        std::cout << "Decayment cannot be performed because mass is too low in this channel" << '\n';
+        std::cout << "Decayment cannot be preformed because mass is too low in this channel" << '\n';
         return 2;
     }
+
     double pout = sqrt((massMot * massMot - (massDau1 + massDau2) * (massDau1 + massDau2)) * (massMot * massMot - (massDau1 - massDau2) * (massDau1 - massDau2))) / massMot * 0.5;
+
     double norm = 2 * M_PI / RAND_MAX;
 
     double phi = rand() * norm;
@@ -176,7 +180,6 @@ int Particle::Decay2Body(Particle &dau1, Particle &dau2) const
 
     return 0;
 }
-
 void Particle::Boost(double bx, double by, double bz)
 {
 
