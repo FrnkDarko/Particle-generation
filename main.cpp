@@ -34,7 +34,7 @@ int main()
     gRandom->SetSeed();
     int N = 120;
     Particle particle[N];
-    for (int i = 0; i != 10; i++)
+    for (int i = 0; i != 1E3; i++)
     {
         int k = 0;
         for (int j = 0; j != 100; j++)
@@ -111,6 +111,10 @@ int main()
                 particle[100 + k] = dau2;
                 k++;
                 invmass_k->Fill(dau1.InvMass(dau2));
+                std::cout << "impulse1: " << dau1.GetPx() << ", " << dau1.GetPy() << ", " << dau1.GetPz() << '\n';
+                std::cout << "impulse2: " << dau2.GetPx()<< ", " << dau2.GetPy() << ", " << dau2.GetPz() << '\n';
+                std::cout << "energy1: " << dau1.GetEnergy() << '\n';
+                std::cout << "energy2: " << dau2.GetEnergy() << '\n';
                 std::cout << "invariant mass of decay particles: " << dau1.InvMass(dau2) << '\n';
             }
             particle_type->Fill(part.GetIndex());
@@ -188,6 +192,7 @@ int main()
     phi_angle->Write();
     theta_angle->Write();
     impulse->Write();
+    t_impulse->Write();
     energy->Write();
     invmass_tot->Write();
     invmass_disc->Write();

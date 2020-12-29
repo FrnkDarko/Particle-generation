@@ -35,8 +35,7 @@ double Particle::GetEnergy() const
 {
     double m = pow(GetMass(), 2);
     double p = pow(fPx, 2) + pow(fPy, 2) + pow(fPz, 2);
-    const double energy = sqrt(m + p);
-    return energy;
+    return sqrt(m + p);
 }
 
 double Particle::InvMass(Particle &p) const
@@ -123,6 +122,21 @@ void Particle::AddParticleType(const char *name, const double mass, const int ch
     }
 }
 
+void Particle::Boost(double bx, double by, double bz)
+{
+
+    double energy = GetEnergy();
+
+    double b2 = bx * bx + by * by + bz * bz;
+    double gamma = 1.0 / sqrt(1.0 - b2);
+    double bp = bx * fPx + by * fPy + bz * fPz;
+    double gamma2 = b2 > 0 ? (gamma - 1.0) / b2 : 0.0;
+
+    fPx += gamma2 * bp * bx + gamma * bx * energy;
+    fPy += gamma2 * bp * by + gamma * by * energy;
+    fPz += gamma2 * bp * bz + gamma * bz * energy;
+}
+
 int Particle::Decay2Body(Particle &dau1, Particle &dau2) const
 {
     if (GetMass() == 0.0)
@@ -179,18 +193,4 @@ int Particle::Decay2Body(Particle &dau1, Particle &dau2) const
     dau2.Boost(bx, by, bz);
 
     return 0;
-}
-void Particle::Boost(double bx, double by, double bz)
-{
-
-    double energy = GetEnergy();
-
-    double b2 = bx * bx + by * by + bz * bz;
-    double gamma = 1.0 / sqrt(1.0 - b2);
-    double bp = bx * fPx + by * fPy + bz * fPz;
-    double gamma2 = b2 > 0 ? (gamma - 1.0) / b2 : 0.0;
-
-    fPx += gamma2 * bp * bx + gamma * bx * energy;
-    fPy += gamma2 * bp * by + gamma * by * energy;
-    fPz += gamma2 * bp * bz + gamma * bz * energy;
 }
